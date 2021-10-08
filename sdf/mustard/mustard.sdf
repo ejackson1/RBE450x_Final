@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <sdf version="1.4">
   <model name="mustard">
-    <pose>0 0 0 0 0 0</pose>
+    <pose>0 0 1 0 0 0</pose>
     <static>true</static>
     <link name="body">
       <inertial>
@@ -18,7 +18,7 @@
       </inertial>
       <visual name="visual">
 	  <geometry>
-	    <mesh><uri>file://textured.dae</uri></mesh>
+	    <mesh><uri>package://sdf/mustard/untextured.stl</uri></mesh>
 	  </geometry>
       </visual>
     </link>
