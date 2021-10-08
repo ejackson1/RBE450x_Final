@@ -13,6 +13,7 @@
   <!-- Launch gazebo -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="paused" value="true" />
+    <arg name="world_name" value="$(find sdf)/mustard/mustard.world"/>
   </include>
 
   <!-- Launch controllers -->
@@ -20,4 +21,7 @@
 
   <!-- Finally, launch moveit -->
   <include file="$(find panda_moveit_config)/launch/move_group.launch" />
+  
+  <!-- Load Mustard-->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-file $(find sdf)/mustard/mustard.sdf -sdf -x 0.5 -y -0.25 -z 0 -model Mustard" />
 </launch>
