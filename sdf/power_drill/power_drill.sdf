@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <sdf version="1.4">
-  <model name="mustard">
-    <link name="mustard">
+  <model name="Drill">
+    <link name="Drill">
       <inertial>
         <mass>1.0</mass>
         <inertia> <!-- inertias are tricky to compute -->
@@ -16,12 +16,12 @@
       </inertial>
       <visual name="visual">
 	  <geometry>
-	    <mesh><uri>model://sdf/mustard/textured.dae</uri></mesh>
+	    <mesh><uri>model://sdf/power_drill/textured.dae</uri></mesh>
 	  </geometry>
       </visual>
       <collision name="collision">
       	  <geometry>
-	    <mesh><uri>model://sdf/mustard/textured.dae</uri></mesh>
+	    <mesh><uri>model://sdf/power_drill/textured.dae</uri></mesh>
 	  </geometry>
       </collision>
     </link>
