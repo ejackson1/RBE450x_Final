@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import tf
 import rospy
 import actionlib
 
@@ -17,6 +18,10 @@ if __name__ == "__main__":
     y = float(input("Y: "))
     z = float(input("Z: "))
 
+    roll = float(input("Roll: "))
+    pitch = float(input("Pitch: "))
+    yaw = float(input("Yaw: "))
+
     goal = MoveArmGoal()
 
     goal.ee_pose = PoseStamped()
@@ -27,12 +32,19 @@ if __name__ == "__main__":
     goal.ee_pose.pose.position.y = y
     goal.ee_pose.pose.position.z = z
 
-    goal.tolerance = 0.05
+    quaternion = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+
+    goal.ee_pose.pose.orientation.x = quaternion[0]
+    goal.ee_pose.pose.orientation.y = quaternion[1]
+    goal.ee_pose.pose.orientation.z = quaternion[2]
+    goal.ee_pose.pose.orientation.w = quaternion[3]
+
+    goal.tolerance = 0.01
 
     client.send_goal(goal)
 
-    rospy.log_info("Sent goal")
+    rospy.loginfo("Sent goal")
 
     client.wait_for_result()
 
-    rospy.log_info("Goal complete!")
+    rospy.loginfo("Goal complete!")
