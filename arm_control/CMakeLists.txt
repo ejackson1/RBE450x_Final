@@ -64,6 +64,7 @@ find_package(catkin REQUIRED
 add_action_files(
   FILES
   MoveArm.action
+  MoveArmCart.action
 )
 
 # Generate added messages and services with any dependencies listed here

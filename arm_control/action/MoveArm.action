@@ -1,4 +1,10 @@
+# Pose for EE
 geometry_msgs/PoseStamped ee_pose
+
+# Opens gripper if true, closes if false.
+bool open
+
+# How close to the goal is good enough
 float64 tolerance
 ---
 bool grasped

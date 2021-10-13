@@ -19,7 +19,9 @@
   <include file="$(find panda_moveit_controller)/launch/main.launch" />
 
   <!-- Finally, launch moveit -->
-  <include file="$(find panda_moveit_config)/launch/move_group.launch" />
+  <include file="$(find panda_moveit_config)/launch/move_group.launch">
+    <remap from="joint_states" to="panda/joint_states" />
+  </include>
   
   <!-- send table urdf to param server -->
   <param name="table_description" textfile="$(find sdf)/table/table.urdf" />
