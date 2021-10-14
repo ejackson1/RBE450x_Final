@@ -12,6 +12,12 @@
 
 ros::Publisher pub;
 
+// The following four functions were adapted from a tutorial.
+// https://github.com/methylDragon/pcl-ros-tutorial/blob/master/PCL%20Reference%20with%20ROS.md#5-putting-it-together-cylinder-segmentation-example-integration-with-moveit-
+// Modifications were made:
+// 1. passThroughFilter accepts extra arguments, allowing for min and max z values to be parameterized
+// 2. removePlaneSurface was modified to look for a normal plane instead of a cylinder
+// 3. cloudCB was modified to use only a subset of the PCL processing functions
 void passThroughFilter(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, double z_min, double z_max)
 {
     pcl::PassThrough<pcl::PointXYZRGB> pass;
@@ -33,16 +39,6 @@ void computeNormals(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, pcl::PointClou
     ne.compute(*cloud_normals);
 }
 
-// Extract normals by index
-void extractNormals(pcl::PointCloud<pcl::Normal>::Ptr cloud_normals, pcl::PointIndices::Ptr inliers_plane)
-{
-    pcl::ExtractIndices<pcl::Normal> extract_normals;
-    extract_normals.setNegative(true);
-    extract_normals.setInputCloud(cloud_normals);
-    extract_normals.setIndices(inliers_plane);
-    extract_normals.filter(*cloud_normals);
-}
-
 void removePlaneSurface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, pcl::PointCloud<pcl::Normal>::Ptr cloud_normals, pcl::PointIndices::Ptr inliers_plane)
 {
     // Find Plane
@@ -57,6 +53,8 @@ void removePlaneSurface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, pcl::Point
     segmentor.setDistanceThreshold(0.155);
     segmentor.setEpsAngle(0.09);
     segmentor.setNormalDistanceWeight(0.1);
+
+    // Set input cloud and cloud normals
     segmentor.setInputCloud(cloud);
     segmentor.setInputNormals(cloud_normals);
 
@@ -72,45 +70,6 @@ void removePlaneSurface(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, pcl::Point
     /* Remove the planar inliers, extract the rest */
     extract_indices.setNegative(true);
     extract_indices.filter(*cloud);
-}
-
-void extractPrism(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, pcl::ModelCoefficients::Ptr coefficients_prism,
-                       pcl::PointCloud<pcl::Normal>::Ptr cloud_normals)
-{
-    // Create the segmentation object for prism segmentation and set all the parameters
-    pcl::SACSegmentationFromNormals<pcl::PointXYZRGB, pcl::Normal> segmentor;
-    pcl::PointIndices::Ptr inliers_cylinder(new pcl::PointIndices);
-    segmentor.setOptimizeCoefficients(true);
-    segmentor.setModelType(pcl::SACMODEL_NORMAL_PLANE);
-    segmentor.setMethodType(pcl::SAC_RANSAC);
-
-    // Set the normal angular distance weight
-    segmentor.setNormalDistanceWeight(0.1);
-
-    // run at max 1000 iterations before giving up
-    segmentor.setMaxIterations(10000);
-
-    // tolerance for variation from model
-    segmentor.setDistanceThreshold(0.025);
-
-    // min max values of radius in meters to consider
-    segmentor.setRadiusLimits(0.01, 0.05);
-    pcl::ExtractIndices<pcl::PointXYZRGB> extract;
-    extract.setInputCloud(cloud);
-    extract.setIndices(inliers_cylinder);
-    extract.setNegative(false);
-    extract.filter(*cloud);
-}
-
-void removeOutliers(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud)
-{
-    // Create the segmentation object for cylinder segmentation and set all the parameters
-    pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> outlier_filter;
-
-    outlier_filter.setInputCloud(cloud);
-    outlier_filter.setMeanK(10);
-    outlier_filter.setStddevMulThresh(2.5);
-    outlier_filter.filter(*cloud);
 }
 
 void cloudCB(const sensor_msgs::PointCloud2ConstPtr& input)
@@ -140,21 +99,11 @@ void cloudCB(const sensor_msgs::PointCloud2ConstPtr& input)
     // Remove Plane Surface
     removePlaneSurface(out, cloud_normals, inliers_plane);
 
-    // // Grab normals of non-plane points
-    // extractNormals(cloud_normals, inliers_plane);
-
-    // Grab Cylinder
-    // pcl::ModelCoefficients::Ptr coefficients_cylinder(new pcl::ModelCoefficients);
-    // extractCylinder(cloud, coefficients_cylinder, cloud_normals);
-
-    // Remove Outliers
-    // removeOutliers(cloud);
-
     // Return error and remove planning scene cylinder if no cylinder found
     // else process the found cylinder cloud
     if (out->points.empty())
     {
-        ROS_ERROR_STREAM_NAMED("cylinder_segment", "Can't find the cylinder!");
+        ROS_ERROR_STREAM_NAMED("obj_segment", "Can't find the pudding box!");
         return;
     }
     else
@@ -168,7 +117,6 @@ void cloudCB(const sensor_msgs::PointCloud2ConstPtr& input)
     }
 }
 
-
 int main(int argc, char* argv[])
 {
     ros::init(argc, argv, "segment");
@@ -177,7 +125,7 @@ int main(int argc, char* argv[])
 
     ros::Subscriber sub = nh.subscribe("/voxel_grid/output", 10, cloudCB);
 
-    pub = nh.advertise<pcl::PCLPointCloud2>("/pcl_test", 10);
+    pub = nh.advertise<pcl::PCLPointCloud2>("/segmented", 10);
 
     ros::spin();
 }
